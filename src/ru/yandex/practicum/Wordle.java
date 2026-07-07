@@ -12,9 +12,7 @@ import java.util.*;
 public class Wordle {
 
     public static void main(String[] args) {
-        try (PrintWriter logger = new PrintWriter(new OutputStreamWriter(
-                new FileOutputStream("wordle_game.log"),
-                StandardCharsets.UTF_8))) {
+        try (PrintWriter logger = new PrintWriter(new OutputStreamWriter(new FileOutputStream("wordle_game.log"), StandardCharsets.UTF_8))) {
             runGame(logger);
         } catch (DictionaryLoadException e) {
             System.err.println("Ошибка загрузки словаря: " + e.getMessage());
@@ -66,7 +64,7 @@ public class Wordle {
         }
     }
 
-    private static void playGameLoop(WordleGame game, PrintWriter logger)  {
+    private static void playGameLoop(WordleGame game, PrintWriter logger) {
         Scanner scanner = new Scanner(System.in);
 
         printGameRules();
