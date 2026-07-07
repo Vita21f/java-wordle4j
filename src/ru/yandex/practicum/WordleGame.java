@@ -106,7 +106,7 @@ public class WordleGame {
 
     private boolean containsLetter(char[] answer, char letter){
         for (char c : answer) {
-            if(c == letter) {
+            if (c == letter) {
                 return true;
             }
         }
@@ -117,7 +117,7 @@ public class WordleGame {
         Set<String> newPossibleWords = new HashSet<>();
 
         for (String candidate: possibleWords) {
-            if(isCandidateSuitable(candidate)) {
+            if (isCandidateSuitable(candidate)) {
                 newPossibleWords.add(candidate);
             }
         }
@@ -134,15 +134,15 @@ public class WordleGame {
         for (int i = 0; i < WORD_LENGTH; i++){
             char c = candidate.charAt(i);
 
-            if(absentLetters.contains(c)) {
+            if (absentLetters.contains(c)) {
                 return false;
             }
-            if(correctPositions[i] != null && correctPositions[i] != c) {
+            if (correctPositions[i] != null && correctPositions[i] != c) {
                 return false;
             }
         }
-        for(char requiredLetter: presentLetters) {
-            if (candidate.indexOf(requiredLetter) == -1){
+        for (char requiredLetter: presentLetters) {
+            if (candidate.indexOf(requiredLetter) == -1) {
                 return false;
             }
         }
@@ -150,7 +150,7 @@ public class WordleGame {
     }
 
     public String getHint() {
-       if(possibleWords.isEmpty()) {
+       if (possibleWords.isEmpty()) {
            return "Нет подходящих слов.";
        }
        for (String candidate: possibleWords) {
