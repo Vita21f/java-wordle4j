@@ -104,7 +104,7 @@ public class WordleGame {
         return new String(resultPattern);
     }
 
-    private boolean containsLetter(char[] answer, char letter){
+    private boolean containsLetter(char[] answer, char letter) {
         for (char c : answer) {
             if (c == letter) {
                 return true;
@@ -116,7 +116,7 @@ public class WordleGame {
     private void updatePossibleWords() {
         Set<String> newPossibleWords = new HashSet<>();
 
-        for (String candidate: possibleWords) {
+        for (String candidate : possibleWords) {
             if (isCandidateSuitable(candidate)) {
                 newPossibleWords.add(candidate);
             }
@@ -131,7 +131,7 @@ public class WordleGame {
     }
 
     private boolean isCandidateSuitable(String candidate) {
-        for (int i = 0; i < WORD_LENGTH; i++){
+        for (int i = 0; i < WORD_LENGTH; i++) {
             char c = candidate.charAt(i);
 
             if (absentLetters.contains(c)) {
@@ -141,7 +141,7 @@ public class WordleGame {
                 return false;
             }
         }
-        for (char requiredLetter: presentLetters) {
+        for (char requiredLetter : presentLetters) {
             if (candidate.indexOf(requiredLetter) == -1) {
                 return false;
             }
@@ -150,15 +150,15 @@ public class WordleGame {
     }
 
     public String getHint() {
-       if (possibleWords.isEmpty()) {
-           return "Нет подходящих слов.";
-       }
-       for (String candidate: possibleWords) {
-           if (!guessedWords.contains(candidate)) {
-               return candidate;
-           }
-       }
-       return possibleWords.iterator().next();
+        if (possibleWords.isEmpty()) {
+            return "Нет подходящих слов.";
+        }
+        for (String candidate : possibleWords) {
+            if (!guessedWords.contains(candidate)) {
+                return candidate;
+            }
+        }
+        return possibleWords.iterator().next();
     }
 
     public boolean isWin(String userWord) {
