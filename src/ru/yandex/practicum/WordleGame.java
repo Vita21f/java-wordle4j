@@ -6,18 +6,24 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class WordleGame {
-    private String correctAnswer;
-    private int attempts = 6;
-    private WordleDictionary dictionary;
+    private static final int WORD_LENGTH = 5;
+    private static final int MAX_ATTEMPTS = 6;
+
+    private final String correctAnswer;
+    private int attempts = MAX_ATTEMPTS;
+    private final WordleDictionary dictionary;
     private final PrintWriter logger;
 
-    private Map<String, String> attemptsHistory = new LinkedHashMap<>();
+    private final Set<Character> absentLetters = new HashSet<>();
+    private final Set<Character> presentLetters = new HashSet<>();
+    private final Character[] correctPositions = new Character[WORD_LENGTH];
+
+    private final Set<String> guessedWords = new HashSet<>();
     private Set<String> possibleWords;
 
     public WordleGame(String correctAnswer, WordleDictionary dictionary, PrintWriter logger) {
         this.correctAnswer = correctAnswer;
         this.dictionary = dictionary;
-
         this.possibleWords = new HashSet<>(dictionary.getWords());
         this.logger = logger;
     }
@@ -37,8 +43,8 @@ public class WordleGame {
 
         String normalized = userWord.toLowerCase().trim();
 
-        if (normalized.length() != 5) {
-            throw new InvalidWordLengthException(5, normalized.length());
+        if (normalized.length() != WORD_LENGTH) {
+            throw new InvalidWordLengthException(WORD_LENGTH, normalized.length());
         }
 
         if (!normalized.matches("[а-яё]+")) {
@@ -52,63 +58,66 @@ public class WordleGame {
         return true;
     }
 
-
-    public String equalsWithCorrectAnswer(String userWord) throws WordleException {
-        String normalizedWord = userWord.toLowerCase().trim();
-
+    public String checkGuess(String userWord) throws WordleException {
         isValidWord(userWord);
 
-        StringBuilder result = new StringBuilder();
-        StringBuilder correctAnswerSb = new StringBuilder(correctAnswer.toLowerCase());
+        String normalizedWord = userWord.toLowerCase().trim();
+        char[] answerChars = correctAnswer.toLowerCase().toCharArray();
+        char[] resultPattern = new char[WORD_LENGTH];
+        boolean[] usedInAnswer = new boolean[WORD_LENGTH];
 
-
-        //поиск точных совпадений
-        for (int i = 0; i < normalizedWord.length(); i++) {
-            if (i < correctAnswerSb.length() && normalizedWord.charAt(i) == correctAnswerSb.charAt(i)) {
-                result.append("+");
-                correctAnswerSb.setCharAt(i, '*'); // пометка использованной буквы
-            } else {
-                result.append(" "); // временно
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            char guessChar = normalizedWord.charAt(i);
+            if (guessChar == answerChars[i]) {
+                resultPattern[i] = '+';
+                usedInAnswer[i] = true;
+                correctPositions[i] = guessChar;
             }
         }
 
-        //поиск букв не на своих местах
-        for (int i = 0; i < normalizedWord.length(); i++) {
-            if (result.charAt(i) == '+') continue;
-
-            char userChar = normalizedWord.charAt(i);
-            int index = correctAnswerSb.indexOf(String.valueOf(userChar));
-
-            if (index != -1) {
-                result.setCharAt(i, '^');
-                correctAnswerSb.setCharAt(index, '*');
-            } else {
-                result.setCharAt(i, '-');
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            if (resultPattern[i] == '+') {
+                continue;
             }
-        }
-        String resultString = result.toString();
-        attemptsHistory.put(normalizedWord, resultString);
-        updatePossibleWords();
+            char guessChar = normalizedWord.charAt(i);
+            boolean foundElsewhere = false;
 
-        return resultString;
-    }
-
-    private void updatePossibleWords(){
-        Set<String> newPossibleWords = new HashSet<>();
-
-        for (String candidate: possibleWords) {
-            boolean isSuitable = true;
-
-            for(Map.Entry<String, String> entry: attemptsHistory.entrySet()) {
-                String userWord = entry.getKey();
-                String resultLine = entry.getValue();
-
-                if(!isWordSuitableForAttempt(candidate, userWord, resultLine)) {
-                    isSuitable = false;
+            for (int j = 0; j < WORD_LENGTH; j++) {
+                if (!usedInAnswer[j] && answerChars[j] == guessChar) {
+                    usedInAnswer[j] = true;
+                    foundElsewhere = true;
                     break;
                 }
             }
-            if (isSuitable) {
+            if (foundElsewhere) {
+                resultPattern[i] = '^';
+                presentLetters.add(guessChar);
+            } else {
+                resultPattern[i] = '-';
+                if (!containsLetter(answerChars, guessChar)) {
+                    absentLetters.add(guessChar);
+                }
+            }
+        }
+        guessedWords.add(normalizedWord);
+        updatePossibleWords();
+        return new String(resultPattern);
+    }
+
+    private boolean containsLetter(char[] answer, char letter){
+        for (char c : answer) {
+            if(c == letter) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updatePossibleWords() {
+        Set<String> newPossibleWords = new HashSet<>();
+
+        for (String candidate: possibleWords) {
+            if(isCandidateSuitable(candidate)) {
                 newPossibleWords.add(candidate);
             }
         }
@@ -121,78 +130,35 @@ public class WordleGame {
         }
     }
 
-    private boolean isWordSuitableForAttempt(String candidate, String userWord, String resultLine) {
-        StringBuilder candidateCopy  = new StringBuilder(candidate);
+    private boolean isCandidateSuitable(String candidate) {
+        for (int i = 0; i < WORD_LENGTH; i++){
+            char c = candidate.charAt(i);
 
-        for(int i = 0; i < 5; i++) {
-            char resultChar = resultLine.charAt(i);
-            char userChar = userWord.charAt(i);
-
-            if (resultChar == '+') {
-                if (candidate.charAt(i) != userChar) {
-                    return false;
-                }
-                candidateCopy.setCharAt(i, '*');
+            if(absentLetters.contains(c)) {
+                return false;
+            }
+            if(correctPositions[i] != null && correctPositions[i] != c) {
+                return false;
             }
         }
-
-        for (int i = 0; i < 5; i++) {
-            char resultChar = resultLine.charAt(i);
-            char userChar = userWord.charAt(i);
-
-            if (resultChar == '^') {
-                if (candidate.charAt(i) == userChar) {
-                    return false;
-                }
-                boolean found = false;
-                for (int j = 0; j < 5; j++) {
-                    if(candidateCopy.charAt(j) == userChar) {
-                        found = true;
-                        candidateCopy.setCharAt(j, '*');
-                        break;
-                    }
-                }
-                if (!found) {
-                    return false;
-                }
-            }
-        }
-
-        for (int i = 0; i <5; i++) {
-            char resultChar = resultLine.charAt(i);
-            char userChar = userWord.charAt(i);
-
-            if (resultChar == '-') {
-                for (int j = 0; j < 5; j++) {
-                    if (candidateCopy.charAt(j) == userChar) {
-                        return false;
-                    }
-                }
+        for(char requiredLetter: presentLetters) {
+            if (candidate.indexOf(requiredLetter) == -1){
+                return false;
             }
         }
         return true;
     }
 
     public String getHint() {
-        Set<String> unusedWords = new HashSet<>();
-        for (String word: possibleWords) {
-            if (!attemptsHistory.containsKey(word)) {
-                unusedWords.add(word);
-            }
-        }
-        if (unusedWords.isEmpty()) {
-            if (possibleWords.isEmpty()) {
-                return "Нет подходящих слов.";
-            } else {
-                for (String word: possibleWords){
-                    return word;
-                }
-            }
-        }
-        for (String hint: unusedWords) {
-            return hint;
-        }
-        return "Не удалось найти подсказку.";
+       if(possibleWords.isEmpty()) {
+           return "Нет подходящих слов.";
+       }
+       for (String candidate: possibleWords) {
+           if (!guessedWords.contains(candidate)) {
+               return candidate;
+           }
+       }
+       return possibleWords.iterator().next();
     }
 
     public boolean isWin(String userWord) {
@@ -202,10 +168,4 @@ public class WordleGame {
     public void decrementAttempts() {
         attempts--;
     }
-
-
-
-
-
-
 }

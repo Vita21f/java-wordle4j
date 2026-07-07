@@ -8,7 +8,6 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WordleGameTest {
-
     private WordleGame game;
     private WordleDictionary dictionary;
     private PrintWriter testLogger;
@@ -71,7 +70,7 @@ class WordleGameTest {
     @Test
     @DisplayName("equalsWithCorrectAnswer - полностью верное слово возвращает +++++")
     void testEqualsWithCorrectAnswer_ExactMatch_ReturnsFivePluses() throws WordleException {
-        String result = game.equalsWithCorrectAnswer("молот");
+        String result = game.checkGuess("молот");
         assertEquals("+++++", result);
     }
 
@@ -84,7 +83,7 @@ class WordleGameTest {
         WordleDictionary extendedDict = new WordleDictionary(extendedWords);
         WordleGame testGame = new WordleGame("буква", extendedDict, testLogger);
 
-        String result = testGame.equalsWithCorrectAnswer("бубна");
+        String result = testGame.checkGuess("бубна");
 
         assertNotNull(result);
         assertEquals(5, result.length());
@@ -96,9 +95,9 @@ class WordleGameTest {
     @Test
     @DisplayName("equalsWithCorrectAnswer - невалидное слово выбрасывает исключение")
     void testEqualsWithCorrectAnswer_InvalidWord_ThrowsException() {
-        assertThrows(WordleException.class, () -> game.equalsWithCorrectAnswer("абвгд"));
-        assertThrows(WordleException.class, () -> game.equalsWithCorrectAnswer("кот"));
-        assertThrows(WordleException.class, () -> game.equalsWithCorrectAnswer(""));
+        assertThrows(WordleException.class, () -> game.checkGuess("абвгд"));
+        assertThrows(WordleException.class, () -> game.checkGuess("кот"));
+        assertThrows(WordleException.class, () -> game.checkGuess(""));
     }
 
     @Test
@@ -122,7 +121,7 @@ class WordleGameTest {
     @Test
     @DisplayName("getHint - после первой попытки даёт корректную подсказку")
     void testGetHint_AfterFirstAttempt_ReturnsValidHint() throws WordleException {
-        game.equalsWithCorrectAnswer("мотор");
+        game.checkGuess("мотор");
         String hint = game.getHint();
 
         assertNotNull(hint);
@@ -131,12 +130,12 @@ class WordleGameTest {
     @Test
     @DisplayName("getHint - не возвращает уже использованные слова")
     void testGetHint_DoesNotReturnUsedWords() throws WordleException {
-        game.equalsWithCorrectAnswer("мотор");
+        game.checkGuess("мотор");
         String hint = game.getHint();
     }
 
     @Test
-    @DisplayName("💡 getHint - при отсутствии вариантов возвращает сообщение")
+    @DisplayName("getHint - при отсутствии вариантов возвращает сообщение")
     void testGetHint_NoWordsLeft_ReturnsErrorMessage() {
         Set<String> singleWordDict = new HashSet<>(Collections.singletonList("молот"));
         WordleDictionary smallDictionary = new WordleDictionary(singleWordDict);
@@ -174,13 +173,13 @@ class WordleGameTest {
 
 
     @Test
-    @DisplayName("📖 getCorrectAnswer возвращает правильный ответ")
+    @DisplayName("getCorrectAnswer возвращает правильный ответ")
     void testGetCorrectAnswer_ReturnsCorrectWord() {
         assertEquals("молот", game.getCorrectAnswer());
     }
 
     @Test
-    @DisplayName("📖 getAttempts возвращает текущее количество попыток")
+    @DisplayName("getAttempts возвращает текущее количество попыток")
     void testGetAttempts_ReturnsCurrentAttempts() {
         assertEquals(6, game.getAttempts());
         game.decrementAttempts();

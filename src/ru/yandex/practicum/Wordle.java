@@ -94,7 +94,7 @@ public class Wordle {
                 if (!game.isValidWord(input)) {
                     continue;
                 }
-                String resultChars = game.equalsWithCorrectAnswer(input);
+                String resultChars = game.checkGuess(input);
                 System.out.println(resultChars);
 
                 if (game.isWin(input)) {
